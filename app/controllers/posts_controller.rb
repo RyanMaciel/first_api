@@ -6,9 +6,22 @@ class PostsController < ApplicationController
   # GET /posts
   # GET /posts.json
   def index
-    @posts = Post.all
 
-    render json: @posts
+    #If latitude and longitude params are provided, return posts within a certain distance
+    if params[:latitude] && params[:longitude]
+      posts_to_render = []
+      Post.find_each do |post|
+        #distance is 5km
+        if distance(params[:latitude].to_f, params[:longitude].to_f, post) <= 5
+          posts_to_render << post
+        end
+      end
+      
+      render json: posts_to_render
+    else
+      @posts = Post.all
+      render json: @posts
+    end
   end
 
   # GET /posts/1
