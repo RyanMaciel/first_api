@@ -61,6 +61,16 @@ class PostsController < ApplicationController
     head :no_content
   end
 
+  def like
+    @post = Post.find(params[:id])
+    @post.likes = @post.likes+1
+    @post.save;
+  end
+  def unlike
+    @post = Post.find(params[:id])
+    @post.likes = @post.likes-1
+    @post.save;
+  end
   private
 
     def set_post
