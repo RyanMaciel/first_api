@@ -1,6 +1,19 @@
 class UsersController < ApplicationController
   before_action :set_user, only: [:show, :update, :destroy]
 
+  def login
+    email_matching_user = User.find_by email: user_params[:email]
+    if email_matching_user
+      auth_result = email_matching_user.authenticate("foobar")
+
+      if !!auth_result
+        render json: auth_result, status: 200
+      else
+        render json: auth_result, status: 400
+      end
+    end
+  end
+
   # GET /users
   # GET /users.json
   def index
