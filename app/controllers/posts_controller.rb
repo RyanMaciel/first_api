@@ -80,7 +80,7 @@ class PostsController < ApplicationController
     end
 
     def post_params
-      params.require(:post).permit(:image_url, :latitude, :longitude, :user_id, :user_auth_key)
+      params.require(:post).permit(:image_url, :latitude, :longitude)
     end
 
  

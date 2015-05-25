@@ -40,12 +40,11 @@ class UsersControllerTest < ActionController::TestCase
   test "should authenticate user" do
 
     @user = User.new(username: "tester1234", email: "test@test.com", password: "foobar", password_confirmation: "foobar")
-    assert @user.valid?
     @user.save
 
     
-    post :login, user: {username: "test1234", email: "test@test.com", password: "foobar", password_confirmation: "foobar"}
-     
+    post :get_api_key, user: {username: "test1234", email: "test@test.com", password: "foobar", password_confirmation: "foobar"}
+    
     assert_response 200
 
   end

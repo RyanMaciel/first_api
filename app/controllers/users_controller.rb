@@ -1,13 +1,17 @@
 class UsersController < ApplicationController
   before_action :set_user, only: [:show, :update, :destroy]
 
-  def login
+  #log the user in and give them a temporary api-key
+  def get_api_key
     email_matching_user = User.find_by email: user_params[:email]
     if email_matching_user
-      auth_result = email_matching_user.authenticate("foobar")
+
+      auth_result = email_matching_user.authenticate(user_params[:password])
 
       if !!auth_result
-        render json: auth_result, status: 200
+
+
+        render plain: auth_result.api_key, status: 200
       else
         render json: auth_result, status: 400
       end

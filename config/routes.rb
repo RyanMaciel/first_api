@@ -3,7 +3,7 @@ Rails.application.routes.draw do
  
   match "/posts/:id/like" => "posts#like", :via => [:post], :as => "posts_like"
   match "/posts/:id/unlike" => "posts#unlike", :via => [:post], :as => "posts_unlike"
-  match "/login" => "users#login", :via => [:post], :as => "users_login"
+  match "/users/get_api_key" => "users#get_api_key", :via => [:post], :as => "users_login"
 
   resources :users, except: [:new, :edit]
   resources :posts, except: [:new, :edit]
