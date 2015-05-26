@@ -3,13 +3,12 @@ class UsersController < ApplicationController
 
   #log the user in and give them a temporary api-key
   def get_api_key
-    email_matching_user = User.find_by email: user_params[:email]
-    if email_matching_user
+    matching_user = User.find_by(id: user_params[:id])
+    if matching_user
 
-      auth_result = email_matching_user.authenticate(user_params[:password])
+      auth_result = matching_user.authenticate(user_params[:password])
 
       if !!auth_result
-
 
         render plain: auth_result.api_key, status: 200
       else
@@ -21,7 +20,8 @@ class UsersController < ApplicationController
   # GET /users
   # GET /users.json
   def index
-    @users = User.all
+    #show 20 users.
+    @users = User.first(20)
 
     render json: @users
   end
@@ -47,12 +47,14 @@ class UsersController < ApplicationController
   # PATCH/PUT /users/1
   # PATCH/PUT /users/1.json
   def update
-    @user = User.find(params[:id])
-
-    if @user.update(user_params)
-      head :no_content
+    if !!@user.authenticate_api_key(params[:user_api_key])
+      if @user.update(user_params)
+        head :no_content
+      else
+        render json: @user.errors, status: :unprocessable_entity
+      end
     else
-      render json: @user.errors, status: :unprocessable_entity
+      head :unauthorized
     end
   end
 
@@ -71,6 +73,7 @@ class UsersController < ApplicationController
     end
 
     def user_params
+      params.permit(:user_api_key, :user, :id)
       params[:user].permit(:username, :email, :password, :password_confirmation)
     end
 end

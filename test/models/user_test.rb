@@ -63,4 +63,13 @@ class UserTest < ActiveSupport::TestCase
     assert_not @user.valid?
   end 
 
+  #test api_key
+  test "api_key_should_validate" do
+    @user.generate_api_key
+    assert !!@user.authenticate_api_key(@user.api_key)
+  end
+
+  test "bad_api_key_should_be_invalid" do 
+    assert_not !!@user.authenticate_api_key("randomkey")
+  end
 end

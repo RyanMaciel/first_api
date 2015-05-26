@@ -19,7 +19,8 @@ class PostsController < ApplicationController
       
       render json: posts_to_render
     else
-      @posts = Post.all
+      #show only 20 posts
+      @posts = Post.first(20)
       render json: @posts
     end
   end
@@ -33,44 +34,68 @@ class PostsController < ApplicationController
   # POST /posts
   # POST /posts.json
   def create
-    @post = Post.new(post_params)
-    if @post.save
-      render json: @post, status: :created, location: @post
+    if authenticate_user
+      @post = Post.new(post_params)
+      if @post.save
+        render json: @post, status: :created, location: @post
+      else
+        render json: @post.errors, status: :unprocessable_entity
+      end
     else
-      render json: @post.errors, status: :unprocessable_entity
+      head :unauthorized
     end
   end
 
   # PATCH/PUT /posts/1
   # PATCH/PUT /posts/1.json
   def update
-    @post = Post.find(params[:id])
+    if authenticate_user
+      @post = Post.find(params[:id])
 
-    if @post.update(post_params)
-      head :no_content
+      if @post.update(post_params)
+        head :no_content
+      else
+        render json: @post.errors, status: :unprocessable_entity
+      end
     else
-      render json: @post.errors, status: :unprocessable_entity
+      head :unauthorized
     end
   end
 
   # DELETE /posts/1
   # DELETE /posts/1.json
   def destroy
-    @post.destroy
+    if authenticate_user
+      @post.destroy
 
-    head :no_content
+      head :no_content
+    else
+      head :unauthorized
+    end
   end
 
+  #these two methods need more authenication ei. does the user already like the post?
   def like
-    @post = Post.find(params[:id])
-    @post.likes = @post.likes+1
-    @post.save;
+    if authenticate_user
+     @post = Post.find(params[:id], params)
+     @post.likes = @post.likes+1
+     @post.save;
+     head :ok
+    else
+      head :unauthorized
+    end 
   end
   def unlike
-    @post = Post.find(params[:id])
-    @post.likes = @post.likes-1
-    @post.save;
+    if authenticate_user 
+      @post = Post.find(params[:id])
+      @post.likes = @post.likes-1
+      @post.save;
+      head :ok
+    else
+      head :unauthorized
+    end
   end
+
   private
 
     def set_post
@@ -80,8 +105,22 @@ class PostsController < ApplicationController
     end
 
     def post_params
+
+      #the order here is relevent, the second line is an implicit return
+      params.permit(:user_id, :user_api_key)
       params.require(:post).permit(:image_url, :latitude, :longitude)
+
     end
 
- 
+    
+    #find the user by id and authenticate them. True if succesful, false if invalid.
+    #this needs to also make sure that the user id matches the owner of the post.
+    def authenticate_user()
+      user = User.find(params[:user_id])
+      if (!@post || user == @post.user) && !!user.authenticate_api_key(params[:user_api_key])
+        return true
+      end
+      return false
+    end
+    
 end

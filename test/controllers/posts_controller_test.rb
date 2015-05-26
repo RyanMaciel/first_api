@@ -2,7 +2,13 @@ require 'test_helper'
 
 class PostsControllerTest < ActionController::TestCase
   setup do
+    @user = User.new(username: "Example User", email: "user@example.com", password: "foobar", password_confirmation: "foobar");
     @post = Post.new(image_url: "test.test.com/image.jpg", latitude: 1.2345, longitude: 1.2345)
+    @post.user = @user
+    @post.save
+    
+    @user.generate_api_key
+    @user.save
   end
 
   test "should get index" do
@@ -15,7 +21,7 @@ class PostsControllerTest < ActionController::TestCase
     
 
     assert_difference('Post.count') do
-      post :create, post: { image_url: @post.image_url, latitude: @post.latitude, longitude: @post.longitude}
+      post :create, post: { image_url: @post.image_url, latitude: @post.latitude, longitude: @post.longitude}, user_id: @user.id, user_api_key: @user.api_key
     end
 
     assert_response :success
@@ -31,16 +37,16 @@ class PostsControllerTest < ActionController::TestCase
 #needs to be fixed
   test "should update post" do
     @post.save
-    put :update, id: @post.id, post: { image_url: @post.image_url, latitude: @post.latitude, longitude: @post.longitude }
-    assert_response 204
+    put :update, id: @post.id, post: { image_url: @post.image_url, latitude: @post.latitude, longitude: @post.longitude }, user_id: @user.id, user_api_key: @user.api_key
+    assert_response :no_content
   end
 
   test "should destroy post" do
     @post.save
     assert_difference('Post.count', -1) do
-      delete :destroy, id: @post.id
+      delete :destroy, id: @post.id, user_id: @user.id, user_api_key: @user.api_key
     end
 
-    assert_response 204
+    assert_response :no_content
   end
 end
