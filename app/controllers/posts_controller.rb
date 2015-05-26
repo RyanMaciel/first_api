@@ -1,6 +1,6 @@
 class PostsController < ApplicationController
-  before_action :set_post, only: [:show, :update, :destroy]
-
+  before_action :set_post, only: [:show, :update, :destroy, :like, :unlike]
+  before_action :authenticate_user, only: [:create, :update, :destroy, :like, :unlike]
   include LocationModule
 
   # GET /posts
@@ -34,66 +34,44 @@ class PostsController < ApplicationController
   # POST /posts
   # POST /posts.json
   def create
-    if authenticate_user
+    if @user
       @post = Post.new(post_params)
+      @post.user = @user
       if @post.save
         render json: @post, status: :created, location: @post
       else
         render json: @post.errors, status: :unprocessable_entity
       end
-    else
-      head :unauthorized
     end
   end
+
 
   # PATCH/PUT /posts/1
   # PATCH/PUT /posts/1.json
   def update
-    if authenticate_user
-      @post = Post.find(params[:id])
+    @post = Post.find(params[:id])
 
-      if @post.update(post_params)
-        head :no_content
-      else
-        render json: @post.errors, status: :unprocessable_entity
-      end
+    if @post.update(post_params)
+      head :no_content
     else
-      head :unauthorized
+      render json: @post.errors, status: :unprocessable_entity
     end
   end
 
   # DELETE /posts/1
   # DELETE /posts/1.json
   def destroy
-    if authenticate_user
-      @post.destroy
-
-      head :no_content
-    else
-      head :unauthorized
-    end
+    @post.destroy
+    head :no_content
   end
 
-  #these two methods need more authenication ei. does the user already like the post?
+  #need to be re-implemented
   def like
-    if authenticate_user
-     @post = Post.find(params[:id], params)
-     @post.likes = @post.likes+1
-     @post.save;
-     head :ok
-    else
-      head :unauthorized
-    end 
+
   end
+
   def unlike
-    if authenticate_user 
-      @post = Post.find(params[:id])
-      @post.likes = @post.likes-1
-      @post.save;
-      head :ok
-    else
-      head :unauthorized
-    end
+    
   end
 
   private
@@ -112,15 +90,15 @@ class PostsController < ApplicationController
 
     end
 
-    
-    #find the user by id and authenticate them. True if succesful, false if invalid.
+    #find the user by id and authenticate them. return true if succesful, end the request if not.
     #this needs to also make sure that the user id matches the owner of the post.
+    #Additionally defines the @user variable and ensures it is non-nil (the else would be called if it was.)
     def authenticate_user()
-      user = User.find(params[:user_id])
-      if (!@post || user == @post.user) && !!user.authenticate_api_key(params[:user_api_key])
+      @user = User.find(params[:user_id])
+      if (!@post || @user == @post.user) && !!@user.authenticate_api_key(params[:user_api_key])
         return true
       end
-      return false
+      head :unauthorized
     end
     
 end

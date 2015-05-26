@@ -18,23 +18,27 @@ class PostsControllerTest < ActionController::TestCase
   end
 
   test "should create post" do
-    
-
+  
+    #Make sure that a new post is created and saved.
     assert_difference('Post.count') do
       post :create, post: { image_url: @post.image_url, latitude: @post.latitude, longitude: @post.longitude}, user_id: @user.id, user_api_key: @user.api_key
     end
 
     assert_response :success
+
+    #Make sure that the post's user has been set
+    assert @post.user == @user
+    assert @user.posts.include?(@post)
   end
 
   test "should show post" do
-    #the post must be save or the controller wont have any posts to show.
+    #The post must be save or the controller wont have any posts to show.
     @post.save
     get :show, id: @post.id
     assert_response :success
   end
 
-#needs to be fixed
+
   test "should update post" do
     @post.save
     put :update, id: @post.id, post: { image_url: @post.image_url, latitude: @post.latitude, longitude: @post.longitude }, user_id: @user.id, user_api_key: @user.api_key
@@ -49,4 +53,37 @@ class PostsControllerTest < ActionController::TestCase
 
     assert_response :no_content
   end
+
+  #test likes
+  test "should like eligible post" do
+    assert_difference('Like.count', 1) do
+      post :like, id: @post.id, user_id: @user.id, user_api_key: @user.api_key
+    end
+    assert_response :no_content
+  end
+
+  test "should unlike eligible post" do
+    assert_difference('Like.count', -1) do
+      post :unlike, id: @post.id, user_id: @user.id, user_api_key: @user.api_key
+    end
+  end
+
+  #since the post has already been liked by the same user it should not be eligible to be liked.
+  test "should not like ineligible post" do
+
+    assert_difference('Like.count', 1) do
+      2.times do
+        post :like, id: @post.id, user_id: @user.id, user_api_key: @user.api_key
+      end
+    end
+    assert_response :no_content
+  end
+
+  #since the post has already be unliked by the same user, it should not be eligible to be liked.
+  test "should not unlike ineligible post" do
+    assert_difference('Like.count', -1) do 
+      2.times do
+        post :like, id: @post.id, user_id: @user.id, user_api_key: @user.api_key
+      end
+    end
 end

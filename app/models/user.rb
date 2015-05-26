@@ -1,6 +1,6 @@
 class User < ActiveRecord::Base
 	has_many :posts
-
+	has_many :likes	#refers to the likes a user has given
 	before_save {self.email = email.downcase}
 
 
